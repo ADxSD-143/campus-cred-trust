@@ -66,8 +66,8 @@ function AuthPage() {
         <div className="hidden lg:block">
           <div className="chip"><Sparkles className="h-3.5 w-3.5 text-primary" /> Trust, scored.</div>
           <h1 className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight">
-            Money between<br/>students,<br/>
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">backed by reputation.</span>
+            Trust before<br/>you lend.<br/>
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">CampusCred.</span>
           </h1>
           <p className="mt-6 max-w-md text-muted-foreground">
             CampusCred turns every loan into a track record. Repay on time, earn trust. Default once, lose it.
