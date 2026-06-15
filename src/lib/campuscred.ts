@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Profile = {
   id: string;
+  campuscred_id: string;
   full_name: string;
   college: string;
   year: string;
@@ -51,17 +52,13 @@ export async function getProfileMap(ids: string[]): Promise<Record<string, Profi
   return map;
 }
 
-export async function searchProfiles(q: string): Promise<Profile[]> {
-  if (!q.trim()) {
-    const { data } = await supabase.from("profiles").select("*").order("score", { ascending: false }).limit(20);
-    return (data as Profile[]) ?? [];
-  }
-  const term = `%${q}%`;
-  const { data } = await supabase
-    .from("profiles")
-    .select("*")
-    .or(`full_name.ilike.${term},college.ilike.${term},email.ilike.${term}`)
-    .order("score", { ascending: false })
-    .limit(30);
-  return (data as Profile[]) ?? [];
+export function normalizeCampusCredId(raw: string): string {
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^CC/, "CC-").replace("CC-", "CC");
+}
+
+export async function findByCampusCredId(rawId: string): Promise<Profile | null> {
+  const id = rawId.trim().toUpperCase().replace(/[\s-]/g, "");
+  if (!id) return null;
+  const { data } = await supabase.from("profiles").select("*").eq("campuscred_id", id).maybeSingle();
+  return (data as Profile) ?? null;
 }
