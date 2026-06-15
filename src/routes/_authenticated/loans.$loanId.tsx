@@ -40,7 +40,7 @@ function LoanDetailsPage() {
   const iAmBorrower = me === loan.borrower_id;
   const counterparty = iAmLender ? borrower : lender;
 
-  async function update(patch: Record<string, any>, msg: string) {
+  async function update(patch: { status: "active"|"repaid"|"defaulted"|"cancelled"|"disputed" }, msg: string) {
     const { error } = await supabase.from("loans").update(patch).eq("id", loanId);
     if (error) { toast.error(error.message); return; }
     toast.success(msg);
