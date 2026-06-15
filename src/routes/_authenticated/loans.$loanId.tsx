@@ -40,7 +40,7 @@ function LoanDetailsPage() {
   const iAmBorrower = me === loan.borrower_id;
   const counterparty = iAmLender ? borrower : lender;
 
-  async function update(patch: { status: "active"|"repaid"|"defaulted"|"cancelled"|"disputed" }, msg: string) {
+  async function update(patch: { status: "active"|"repaid"|"defaulted"|"cancelled" }, msg: string) {
     const { error } = await supabase.from("loans").update(patch).eq("id", loanId);
     if (error) { toast.error(error.message); return; }
     toast.success(msg);
@@ -110,7 +110,6 @@ function LoanDetailsPage() {
               <Button variant="outline" onClick={() => update({ status: "defaulted" }, "Marked as defaulted")}>
                 <AlertTriangle className="mr-2 h-4 w-4" />Mark defaulted
               </Button>
-              <Button variant="outline" onClick={() => update({ status: "disputed" }, "Loan disputed")}>Dispute</Button>
             </>
           )}
           {(loan.status === "repaid" || loan.status === "cancelled" || loan.status === "defaulted") && (
