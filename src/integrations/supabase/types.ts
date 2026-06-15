@@ -62,6 +62,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          campuscred_id: string
           college: string
           created_at: string
           email: string | null
@@ -74,6 +75,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          campuscred_id?: string
           college?: string
           created_at?: string
           email?: string | null
@@ -86,6 +88,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          campuscred_id?: string
           college?: string
           created_at?: string
           email?: string | null
@@ -142,6 +145,7 @@ export type Database = {
         Args: { _delta: number; _loan: string; _reason: string; _user: string }
         Returns: undefined
       }
+      gen_campuscred_id: { Args: never; Returns: string }
     }
     Enums: {
       loan_status:

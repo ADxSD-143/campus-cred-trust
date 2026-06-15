@@ -4,7 +4,8 @@ import { getMyLoans, getMyProfile, getProfileMap, type Loan, type Profile } from
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ScoreRing } from "@/components/score-ring";
-import { ArrowDownLeft, ArrowUpRight, Clock, Plus, TrendingUp, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Clock, Copy, IdCard, Plus, TrendingUp, Wallet } from "lucide-react";
+import { toast } from "sonner";
 import { scoreTier } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -41,14 +42,29 @@ function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm text-muted-foreground">Hello {profile?.full_name?.split(" ")[0] || "there"}</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Your campus credit, at a glance</h1>
         </div>
-        <Link to="/loans/new" className="hidden items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] sm:inline-flex">
-          <Plus className="h-4 w-4" /> New loan
-        </Link>
+        <div className="flex items-center gap-3">
+          {profile?.campuscred_id && (
+            <button
+              type="button"
+              onClick={() => { navigator.clipboard.writeText(profile.campuscred_id); toast.success("CampusCred ID copied"); }}
+              className="glass-card group flex items-center gap-2 px-3 py-2 text-xs"
+              title="Click to copy"
+            >
+              <IdCard className="h-3.5 w-3.5 text-primary" />
+              <span className="text-muted-foreground">Your ID</span>
+              <span className="numeric font-semibold tracking-wider">{profile.campuscred_id}</span>
+              <Copy className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
+          )}
+          <Link to="/loans/new" className="hidden items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] sm:inline-flex">
+            <Plus className="h-4 w-4" /> New loan
+          </Link>
+        </div>
       </div>
 
       {/* Hero score + KPIs */}

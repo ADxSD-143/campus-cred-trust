@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,13 +57,6 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/dashboard" });
-    if (result.error) { toast.error("Google sign-in failed"); setBusy(false); return; }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
-  }
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -110,14 +102,8 @@ function AuthPage() {
             {mode === "signin" ? "Sign in to manage your campus loans." : "Start building your CampusCred score."}
           </p>
 
-          <Button type="button" variant="outline" className="mt-6 w-full" onClick={handleGoogle} disabled={busy}>
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24"><path fill="#fff" d="M21.35 11.1H12v3.2h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.9 5.9 0 010-11.8c1.85 0 3.1.78 3.81 1.45l2.6-2.5C16.86 4.2 14.6 3.2 12 3.2 6.98 3.2 2.9 7.28 2.9 12.3s4.08 9.1 9.1 9.1c5.26 0 8.74-3.7 8.74-8.9 0-.6-.07-1.05-.16-1.4z"/></svg>
-            Continue with Google
-          </Button>
 
-          <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
-          </div>
+
 
           <form onSubmit={handleEmail} className="space-y-3">
             {mode === "signup" && (

@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScoreRing } from "@/components/score-ring";
-import { searchProfiles, type Profile } from "@/lib/campuscred";
+import { findByCampusCredId, type Profile } from "@/lib/campuscred";
 import { toast } from "sonner";
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, IdCard, X } from "lucide-react";
 
 const searchSchema = z.object({ with: z.string().optional() });
 
@@ -26,8 +26,8 @@ function NewLoanPage() {
   const [me, setMe] = useState<string | null>(null);
   const [role, setRole] = useState<"lender" | "borrower">("lender");
   const [counterparty, setCounterparty] = useState<Profile | null>(null);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Profile[]>([]);
+  const [idInput, setIdInput] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
   const [amount, setAmount] = useState("");
   const [purpose, setPurpose] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -41,15 +41,20 @@ function NewLoanPage() {
       });
     }
   }, [prefillId]);
-  useEffect(() => {
-    if (counterparty) return;
-    const t = setTimeout(() => { searchProfiles(query).then(setResults); }, 200);
-    return () => clearTimeout(t);
-  }, [query, counterparty]);
+
+  async function lookup() {
+    if (!idInput.trim()) return;
+    setLookingUp(true);
+    const p = await findByCampusCredId(idInput);
+    setLookingUp(false);
+    if (!p) { toast.error("No student found with that CampusCred ID"); return; }
+    if (p.id === me) { toast.error("That's your own ID"); return; }
+    setCounterparty(p);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!me || !counterparty) { toast.error("Pick a student"); return; }
+    if (!me || !counterparty) { toast.error("Add a student by CampusCred ID"); return; }
     const amt = Number(amount);
     if (!amt || amt <= 0) { toast.error("Enter a valid amount"); return; }
     if (!dueDate) { toast.error("Pick a due date"); return; }
@@ -62,7 +67,7 @@ function NewLoanPage() {
     }).select("id").single();
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Loan request created");
+    toast.success("Loan request sent");
     navigate({ to: "/loans/$loanId", params: { loanId: data.id } });
   }
 
@@ -70,7 +75,7 @@ function NewLoanPage() {
     <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Create a loan request</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Both parties confirm the loan in the next screen.</p>
+        <p className="mt-1 text-sm text-muted-foreground">The other party confirms in the next screen.</p>
 
         <form onSubmit={submit} className="mt-6 space-y-6">
           {/* Role */}
@@ -92,9 +97,9 @@ function NewLoanPage() {
             </div>
           </div>
 
-          {/* Counterparty */}
+          {/* Counterparty via CampusCred ID */}
           <div className="space-y-2">
-            <Label>{role === "lender" ? "Borrower" : "Lender"}</Label>
+            <Label>{role === "lender" ? "Borrower's" : "Lender's"} CampusCred ID</Label>
             {counterparty ? (
               <div className="glass-card flex items-center justify-between p-3">
                 <div className="flex items-center gap-3">
@@ -103,27 +108,24 @@ function NewLoanPage() {
                   </div>
                   <div>
                     <div className="text-sm font-semibold">{counterparty.full_name}</div>
-                    <div className="text-xs text-muted-foreground">{counterparty.college} • Score {Math.round(Number(counterparty.score))}</div>
+                    <div className="numeric text-xs text-muted-foreground">{counterparty.campuscred_id} • Score {Math.round(Number(counterparty.score))}</div>
                   </div>
                 </div>
-                <button type="button" onClick={() => setCounterparty(null)} className="text-xs text-muted-foreground hover:text-foreground">Change</button>
+                <button type="button" onClick={() => setCounterparty(null)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
               </div>
             ) : (
-              <>
-                <Input placeholder="Search by name, college, email…" value={query} onChange={(e) => setQuery(e.target.value)} />
-                <div className="max-h-64 overflow-auto rounded-xl border border-border">
-                  {results.filter(p => p.id !== me).slice(0, 8).map((p) => (
-                    <button key={p.id} type="button" onClick={() => setCounterparty(p)} className="flex w-full items-center justify-between gap-3 border-b border-border/40 px-3 py-2.5 text-left last:border-0 hover:bg-secondary">
-                      <div>
-                        <div className="text-sm font-medium">{p.full_name}</div>
-                        <div className="text-xs text-muted-foreground">{p.college}</div>
-                      </div>
-                      <span className="numeric text-xs text-muted-foreground">{Math.round(Number(p.score))}</span>
-                    </button>
-                  ))}
-                  {results.length === 0 && <div className="p-4 text-center text-xs text-muted-foreground">No matches</div>}
-                </div>
-              </>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="CCXXXXXX"
+                  value={idInput}
+                  onChange={(e) => setIdInput(e.target.value)}
+                  className="numeric uppercase tracking-wider"
+                  maxLength={12}
+                />
+                <Button type="button" variant="outline" onClick={lookup} disabled={lookingUp || !idInput.trim()}>
+                  {lookingUp ? "..." : "Find"}
+                </Button>
+              </div>
             )}
           </div>
 
@@ -153,19 +155,19 @@ function NewLoanPage() {
       <aside className="glass-card sticky top-24 h-fit p-6">
         <div className="chip">Preview</div>
         <h3 className="mt-3 text-lg font-semibold">{role === "lender" ? "You lend" : "You borrow"} {amount ? `₹${Number(amount).toLocaleString()}` : "—"}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{counterparty ? `${role==='lender'?'to':'from'} ${counterparty.full_name}` : "Pick a student"}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{counterparty ? `${role==='lender'?'to':'from'} ${counterparty.full_name}` : "Add a student by CampusCred ID"}</p>
         {counterparty && (
           <div className="mt-6 flex items-center gap-4">
             <ScoreRing score={Number(counterparty.score)} size={110} />
             <div className="text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{counterparty.full_name}</div>
-              <div>{counterparty.college || "—"}</div>
+              <div className="numeric flex items-center gap-1.5 text-xs"><IdCard className="h-3 w-3" />{counterparty.campuscred_id}</div>
               <div className="mt-2">Due {dueDate || "—"}</div>
             </div>
           </div>
         )}
         <div className="mt-6 rounded-xl bg-surface p-4 text-xs text-muted-foreground">
-          Trust is earned slowly and lost quickly. Both parties must agree before the loan goes active.
+          Trust is earned slowly and lost quickly. The other party must accept before the loan goes active.
         </div>
       </aside>
     </div>
