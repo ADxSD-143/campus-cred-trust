@@ -14,16 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      loans: {
+        Row: {
+          amount: number
+          borrower_id: string
+          created_at: string
+          due_date: string
+          funded_at: string | null
+          id: string
+          initiator_id: string
+          lender_id: string
+          notes: string | null
+          purpose: string
+          repaid_at: string | null
+          status: Database["public"]["Enums"]["loan_status"]
+        }
+        Insert: {
+          amount: number
+          borrower_id: string
+          created_at?: string
+          due_date: string
+          funded_at?: string | null
+          id?: string
+          initiator_id: string
+          lender_id: string
+          notes?: string | null
+          purpose?: string
+          repaid_at?: string | null
+          status?: Database["public"]["Enums"]["loan_status"]
+        }
+        Update: {
+          amount?: number
+          borrower_id?: string
+          created_at?: string
+          due_date?: string
+          funded_at?: string | null
+          id?: string
+          initiator_id?: string
+          lender_id?: string
+          notes?: string | null
+          purpose?: string
+          repaid_at?: string | null
+          status?: Database["public"]["Enums"]["loan_status"]
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          college: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          score: number
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          college?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id: string
+          phone?: string | null
+          score?: number
+          updated_at?: string
+          year?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          college?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          score?: number
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
+      score_events: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          loan_id: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          loan_id?: string | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          loan_id?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "score_events_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_score: {
+        Args: { _delta: number; _loan: string; _reason: string; _user: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      loan_status:
+        | "requested"
+        | "active"
+        | "repaid"
+        | "defaulted"
+        | "cancelled"
+        | "disputed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +277,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      loan_status: [
+        "requested",
+        "active",
+        "repaid",
+        "defaulted",
+        "cancelled",
+        "disputed",
+      ],
+    },
   },
 } as const
